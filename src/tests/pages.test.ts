@@ -13,6 +13,7 @@ import { describe, expect, test } from 'vitest';
 import Cadastro from '~/pages/cliente/cadastro.astro';
 import Configuracoes from '~/pages/cliente/configuracoes.astro';
 import EsqueciSenha from '~/pages/cliente/esqueci-senha.astro';
+import Exportar from '~/pages/cliente/exportar.astro';
 import Erro404 from '~/pages/404.astro';
 import Login from '~/pages/cliente/login.astro';
 import Erro500 from '~/pages/500.astro';
@@ -601,5 +602,43 @@ describe('cliente/cadastro.astro', () => {
     const html = await render(Cadastro);
     expect(html).toContain('role="alert"');
     expect(html).toContain('hidden');
+  });
+});
+
+describe('cliente/exportar.astro', () => {
+  test('título "Arquivo de dados" com breadcrumb Painel', async () => {
+    const html = await render(Exportar);
+    expect(html).toContain('Arquivo de dados');
+    expect(html).toMatch(/href="\/cliente\/painel"/);
+    expect(html).toContain('Exportar dados');
+  });
+
+  test('descreve formato .lp.gz e influx write', async () => {
+    const html = await render(Exportar);
+    expect(html).toContain('.lp.gz');
+    expect(html).toContain('influx write');
+  });
+
+  test('lista de arquivos inicialmente oculta + div estado visível', async () => {
+    const html = await render(Exportar);
+    expect(html).toMatch(/id="arquivos"[^>]*hidden/);
+    expect(html).toContain('id="estado"');
+    expect(html).toContain('Carregando');
+  });
+
+  test('caixa de erro com role=alert inicialmente oculta', async () => {
+    const html = await render(Exportar);
+    expect(html).toMatch(/id="erro"[^>]*role="alert"/);
+    expect(html).toContain('hidden');
+  });
+
+  test('nota de validade dos links de 5 minutos', async () => {
+    const html = await render(Exportar);
+    expect(html).toContain('5 minutos');
+  });
+
+  test('marcado noindex (área logada)', async () => {
+    const html = await render(Exportar);
+    expect(html).toContain('noindex');
   });
 });

@@ -3,6 +3,7 @@ import Base from '~/layouts/Base.astro';
 import Badge from '~/components/ui/Badge.astro';
 import Card from '~/components/ui/Card.astro';
 import Button from '~/components/ui/Button.astro';
+import { API_URL } from '~/config';
 
 interface Plano {
   id: 'free' | 'pro' | 'business';
@@ -52,7 +53,7 @@ const planos: Plano[] = [
   {
     id: 'business',
     nome: 'Business',
-    publico: 'Pra quem precisa de tudo customizado e suporte direto.',
+    publico: 'Volume sob medida, disponibilidade garantida em contrato, pode rodar dentro da sua infra, suporte 24/7, documentação de LGPD e auditoria.',
     precoMensal: null,
     precoAnualPorMes: null,
     destaque: false,
@@ -63,9 +64,7 @@ const planos: Plano[] = [
       'Suporte 24/7',
       'Documentação de LGPD e auditoria',
     ],
-    // CF Email Routing pra `contato@` ainda nao configurado — GitHub issue
-    // e a forma confiavel: tracker publico, evita undelivered.
-    cta: { href: 'https://github.com/danpqdan/portifolio/issues/new?title=Interesse+plano+Business&labels=comercial', label: 'Falar com vendas' },
+    cta: { href: 'mailto:contato@dsplayground.com.br', label: 'Falar com a equipe' },
   },
 ];
 
@@ -127,7 +126,7 @@ const degraus = [0.05, 0.1, 0.5, 1, 3, 5, 10, 30, 100];
   title="Preços"
   description="Comece grátis com até 100 mil visitas por dia. Mude de plano quando seu site crescer. Sem pegadinha."
 >
-  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6" data-api-url={API_URL}>
     <h1 class="text-display-sm sm:text-display-md text-white">Planos simples, sem letras miúdas</h1>
     <p class="mt-3 max-w-2xl text-slate-300">Pague pelo tamanho do seu site. Mude de plano quando quiser, sem multa.</p>
 
@@ -205,6 +204,7 @@ const degraus = [0.05, 0.1, 0.5, 1, 3, 5, 10, 30, 100];
             href={plano.cta.href}
             variant={plano.destaque ? 'primary' : 'secondary'}
             data-cta={`plano-${plano.id}`}
+            data-checkout={plano.id === 'pro' ? 'pro' : undefined}
             class="mt-8"
           >
             {plano.cta.label}
@@ -377,5 +377,56 @@ const degraus = [0.05, 0.1, 0.5, 1, 3, 5, 10, 30, 100];
       slider.addEventListener('input', aplicarCalc);
       aplicarCalc(); // inicial
     }
+  </script>
+
+  <!-- Auth-aware CTA: deslogado → cadastro; logado → checkout ou painel. -->
+  <script>
+    (async () => {
+      const section = document.querySelector<HTMLElement>('[data-api-url]');
+      const apiUrl = section?.dataset.apiUrl ?? 'https://api.dsplayground.com.br';
+
+      let logado = false;
+      try {
+        const r = await fetch(`${apiUrl}/cliente/auth/me`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        logado = r.ok;
+      } catch {
+        logado = false;
+      }
+
+      if (!logado) return; // deslogado — hrefs originais (cadastro) ficam
+
+      // Logado: ajusta CTAs
+      const btnPro = document.querySelector<HTMLAnchorElement>('[data-checkout="pro"]');
+      if (btnPro) {
+        btnPro.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            const resp = await fetch(`${apiUrl}/billing/checkout`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ plano: 'pro' }),
+            });
+            if (resp.ok) {
+              const { checkout_url } = await resp.json() as { checkout_url: string };
+              window.location.href = checkout_url;
+            } else {
+              window.location.href = '/cliente/configuracoes?tab=faturamento';
+            }
+          } catch {
+            window.location.href = '/cliente/configuracoes?tab=faturamento';
+          }
+        });
+      }
+
+      // Free CTA: logado → painel (nao precisa de novo cadastro)
+      const btnFree = document.querySelector<HTMLAnchorElement>('[data-cta="plano-free"]');
+      if (btnFree) {
+        btnFree.setAttribute('href', '/cliente/painel');
+      }
+    })();
   </script>
 </Base>

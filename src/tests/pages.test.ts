@@ -135,6 +135,23 @@ describe('precos.astro', () => {
     const html = await render(Precos);
     expect(html).toMatch(/href="\/cliente\/cadastro\?plano=pro"/);
   });
+
+  test('CTA do plano Business usa mailto contato@dsplayground.com.br', async () => {
+    const html = await render(Precos);
+    const businessSection = html.match(/data-plano="business"[\s\S]*?<\/article>/);
+    expect(businessSection).not.toBeNull();
+    expect(businessSection![0]).toContain('mailto:contato@dsplayground.com.br');
+  });
+
+  test('botao Pro tem data-checkout="pro" pra JS auth-aware', async () => {
+    const html = await render(Precos);
+    expect(html).toMatch(/data-checkout="pro"/);
+  });
+
+  test('page expoe data-api-url pra script auth-aware', async () => {
+    const html = await render(Precos);
+    expect(html).toMatch(/data-api-url=/);
+  });
 });
 
 describe('cliente/painel.astro', () => {
@@ -203,6 +220,11 @@ describe('cliente/configuracoes.astro', () => {
     expect(html).toContain('Plano atual');
     expect(html).toContain('Comparar planos');
     expect(html).toMatch(/id="fat-planos-grid"/);
+  });
+
+  test('aba faturamento tem container com data-checkout-enabled pra JS de upgrade', async () => {
+    const html = await render(Configuracoes);
+    expect(html).toMatch(/data-checkout-enabled="true"/);
   });
 
   test('aba time descreve papéis previstos (Owner/Editor/Viewer)', async () => {

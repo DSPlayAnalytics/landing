@@ -11,6 +11,7 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { describe, expect, test } from 'vitest';
 
 import Configuracoes from '~/pages/cliente/configuracoes.astro';
+import EsqueciSenha from '~/pages/cliente/esqueci-senha.astro';
 import Erro404 from '~/pages/404.astro';
 import Erro500 from '~/pages/500.astro';
 import Index from '~/pages/index.astro';
@@ -469,5 +470,48 @@ describe('integracoes.astro', () => {
     const html = await render(Integracoes);
     expect(html).toMatch(/data-cta="integracoes-cadastro"/);
     expect(html).toMatch(/data-cta="integracoes-github"/);
+  });
+});
+
+describe('cliente/esqueci-senha.astro', () => {
+  test('título "Recuperar acesso" e descrição do magic-link', async () => {
+    const html = await render(EsqueciSenha);
+    expect(html).toContain('Recuperar acesso');
+    expect(html).toContain('link mágico');
+  });
+
+  test('input email com label associada (a11y)', async () => {
+    const html = await render(EsqueciSenha);
+    expect(html).toMatch(/<label[^>]*for="email"/);
+    expect(html).toMatch(/<input[^>]*id="email"[^>]*type="email"/);
+  });
+
+  test('botão de submit tem data-cta="form-esqueci-senha"', async () => {
+    const html = await render(EsqueciSenha);
+    expect(html).toContain('data-cta="form-esqueci-senha"');
+  });
+
+  test('link "Lembrou da senha?" aponta pra /cliente/login', async () => {
+    const html = await render(EsqueciSenha);
+    expect(html).toMatch(/href="\/cliente\/login"/);
+    expect(html).toContain('Lembrou da senha?');
+  });
+
+  test('link "Sem conta?" aponta pra /cliente/cadastro', async () => {
+    const html = await render(EsqueciSenha);
+    expect(html).toMatch(/href="\/cliente\/cadastro"/);
+    expect(html).toContain('Sem conta?');
+  });
+
+  test('mensagem de sucesso existe + menciona expiração em 15 minutos', async () => {
+    const html = await render(EsqueciSenha);
+    expect(html).toContain('Link enviado');
+    expect(html).toContain('15 minutos');
+  });
+
+  test('caixa de erro tem role=alert (a11y)', async () => {
+    const html = await render(EsqueciSenha);
+    const alertCount = (html.match(/role="alert"/g) || []).length;
+    expect(alertCount).toBeGreaterThanOrEqual(2);
   });
 });

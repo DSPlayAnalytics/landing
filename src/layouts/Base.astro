@@ -3,6 +3,7 @@ import '~/styles/global.css';
 import SeoHead from '~/components/SeoHead.astro';
 import Nav from '~/components/Nav.astro';
 import Footer from '~/components/Footer.astro';
+import ToastContainer from '~/components/ui/ToastContainer.astro';
 import { PUBLISHABLE_KEY, API_URL, DEBUG } from '~/config';
 
 interface Props {
@@ -39,6 +40,8 @@ const sdkConfig = {
     </main>
     <Footer />
 
+    <ToastContainer />
+
     <script is:inline type="application/json" id="ds-config" set:html={JSON.stringify(sdkConfig)} />
 
     <script>
@@ -53,6 +56,8 @@ const sdkConfig = {
       import {
         iniciarAnalytics,
         enviarEvento,
+        trackConversion,
+        trackSignup,
         HeatmapUtils,
         WebSocketService,
       } from '@danpqdan/dsplayground-analytics-sdk';
@@ -84,8 +89,15 @@ const sdkConfig = {
           try { heatmap.parar('aba_fechada'); } catch {}
         });
 
-        (window as any).__dsplayground = { iniciarAnalytics, enviarEvento, heatmap };
-        attachCtaTracking(document, enviarEvento);
+        (window as any).__dsplayground = { iniciarAnalytics, enviarEvento, trackConversion, trackSignup, heatmap };
+        attachCtaTracking(document, (nome, props) => {
+          enviarEvento(nome, props);
+          // CTAs de plano no /precos emitem conversao estruturada.
+          const cta = props.cta as string | undefined;
+          if (cta?.startsWith('plano-')) {
+            trackConversion('plan_cta_click', undefined, { plan: cta.slice(6) });
+          }
+        });
       } catch (e) {
         if (sdkConfig.debug) console.warn('SDK falhou ao carregar', e);
       }

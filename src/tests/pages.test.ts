@@ -10,9 +10,11 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { describe, expect, test } from 'vitest';
 
+import Cadastro from '~/pages/cliente/cadastro.astro';
 import Configuracoes from '~/pages/cliente/configuracoes.astro';
 import EsqueciSenha from '~/pages/cliente/esqueci-senha.astro';
 import Erro404 from '~/pages/404.astro';
+import Login from '~/pages/cliente/login.astro';
 import Erro500 from '~/pages/500.astro';
 import Index from '~/pages/index.astro';
 import Integracoes from '~/pages/integracoes.astro';
@@ -513,5 +515,91 @@ describe('cliente/esqueci-senha.astro', () => {
     const html = await render(EsqueciSenha);
     const alertCount = (html.match(/role="alert"/g) || []).length;
     expect(alertCount).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('cliente/login.astro', () => {
+  test('título "Entrar" com instrução de email', async () => {
+    const html = await render(Login);
+    expect(html).toContain('Entrar');
+    expect(html).toContain('Use o email da sua conta');
+  });
+
+  test('inputs email e senha com labels associadas (a11y)', async () => {
+    const html = await render(Login);
+    expect(html).toMatch(/<label[^>]*for="email"/);
+    expect(html).toMatch(/<input[^>]*id="email"[^>]*type="email"/);
+    expect(html).toMatch(/<label[^>]*for="senha"/);
+    expect(html).toMatch(/<input[^>]*id="senha"[^>]*type="password"/);
+  });
+
+  test('botão submit com data-cta="form-login"', async () => {
+    const html = await render(Login);
+    expect(html).toContain('data-cta="form-login"');
+  });
+
+  test('link "Sem conta?" aponta pra /cliente/cadastro', async () => {
+    const html = await render(Login);
+    expect(html).toMatch(/href="\/cliente\/cadastro"/);
+    expect(html).toContain('Sem conta?');
+  });
+
+  test('link "Esqueci minha senha" com data-cta="link-esqueci-senha"', async () => {
+    const html = await render(Login);
+    expect(html).toMatch(/href="\/cliente\/esqueci-senha"[^>]*data-cta="link-esqueci-senha"/);
+    expect(html).toContain('Esqueci minha senha');
+  });
+
+  test('FormError oculto com role=alert (a11y)', async () => {
+    const html = await render(Login);
+    expect(html).toContain('role="alert"');
+    expect(html).toContain('hidden');
+  });
+});
+
+describe('cliente/cadastro.astro', () => {
+  test('título "Criar conta" com slogan grátis sem cartão', async () => {
+    const html = await render(Cadastro);
+    expect(html).toContain('Criar conta');
+    expect(html).toContain('grátis');
+    expect(html).toContain('Sem cartão de crédito');
+  });
+
+  test('4 inputs: nome_site, slug, email, senha com labels (a11y)', async () => {
+    const html = await render(Cadastro);
+    expect(html).toMatch(/<label[^>]*for="nome_site"/);
+    expect(html).toMatch(/<label[^>]*for="slug"/);
+    expect(html).toMatch(/<label[^>]*for="email"/);
+    expect(html).toMatch(/<label[^>]*for="senha"/);
+  });
+
+  test('slug tem hint sobre URL do painel', async () => {
+    const html = await render(Cadastro);
+    expect(html).toContain('URL do seu painel');
+    expect(html).toContain('letras minúsculas');
+  });
+
+  test('slug tem pattern de validação e limites 3-32', async () => {
+    const html = await render(Cadastro);
+    expect(html).toMatch(/minlength="3"/);
+    expect(html).toMatch(/maxlength="32"/);
+    expect(html).toMatch(/pattern="/);
+  });
+
+  test('botão submit com data-cta="form-cadastro"', async () => {
+    const html = await render(Cadastro);
+    expect(html).toContain('data-cta="form-cadastro"');
+  });
+
+  test('link "Já tem conta?" aponta pra /cliente/login', async () => {
+    const html = await render(Cadastro);
+    expect(html).toMatch(/href="\/cliente\/login"/);
+    expect(html).toContain('Já tem conta?');
+  });
+
+  test('FormError oculto com role=alert (a11y)', async () => {
+    const html = await render(Cadastro);
+    expect(html).toContain('role="alert"');
+    expect(html).toContain('hidden');
   });
 });

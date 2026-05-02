@@ -236,7 +236,7 @@ const tabs = [
 
         <!-- ABA 5: FATURAMENTO -->
         <Fragment slot="faturamento">
-          <div class="space-y-6">
+          <div class="space-y-6" data-checkout-enabled="true">
             <Card>
               <h2 class="text-lg font-semibold text-white">Plano atual</h2>
               <div id="fat-plano-atual" class="mt-4">
@@ -617,7 +617,7 @@ const tabs = [
           <div class="mt-4">
             ${isAtual
               ? `<button disabled class="w-full rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-500 cursor-not-allowed">Plano atual</button>`
-              : `<a href="/precos" data-cta="config-faturamento-mudar-${p.id}" class="block w-full rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-semibold text-white shadow-elev-1 transition hover:bg-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">${p.id === 'free' || _ordemPlano(p.id) < _ordemPlano(planoAtual) ? 'Fazer downgrade' : `Mudar para ${nomeExibicao}`}</a>`
+              : `<button type="button" data-cta="config-faturamento-checkout-${p.id}" data-checkout-plano="${p.id}" class="block w-full rounded-lg bg-brand-500 px-4 py-2 text-center text-sm font-semibold text-white shadow-elev-1 transition hover:bg-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">${p.id === 'free' || _ordemPlano(p.id) < _ordemPlano(planoAtual) ? 'Fazer downgrade' : `Mudar para ${nomeExibicao}`}</button>`
             }
           </div>
         `;
@@ -635,6 +635,30 @@ const tabs = [
         if (!resp.ok) throw new Error(`status ${resp.status}`);
         const data = await resp.json();
         renderFaturamento(planoAtual, data.planos ?? []);
+        // Attach checkout handlers after render
+        document.querySelectorAll<HTMLButtonElement>('[data-checkout-plano]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const plano = btn.dataset.checkoutPlano!;
+            btn.disabled = true;
+            btn.textContent = 'Aguarde…';
+            try {
+              const r = await fetch(`${API_URL}/billing/checkout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ plano }),
+              });
+              if (r.ok) {
+                const { checkout_url } = await r.json() as { checkout_url: string };
+                window.location.href = checkout_url;
+              } else {
+                window.location.href = `/cliente/configuracoes?tab=faturamento&erro=stripe_indisponivel`;
+              }
+            } catch {
+              window.location.href = `/cliente/configuracoes?tab=faturamento&erro=stripe_indisponivel`;
+            }
+          });
+        });
       } catch (e) {
         console.error('faturamento: erro ao carregar planos', e);
         document.getElementById('fat-planos-loading')?.classList.add('hidden');

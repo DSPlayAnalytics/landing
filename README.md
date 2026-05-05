@@ -348,7 +348,7 @@ Copie `.env.example` para `.env` e ajuste para o ambiente local.
 
 - Node.js 20+
 - Token GitHub com `read:packages` para instalar o SDK do GitHub Packages
-- Backend rodando localmente ([DSPlayAnalytics/backend](/privado/)
+- Backend rodando localmente ([DSPlayAnalytics/backend] `privado`
 
 ### Instalação
 

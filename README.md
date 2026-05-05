@@ -1,87 +1,145 @@
 # DSPlay Analytics — Landing
 
-Landing comercial do [DSPlay Analytics](https://dsplayground.com.br), construída com Astro 6 + Tailwind 4. Inclui área pública (marketing, preços, integrações) e área autenticada do cliente (painel, configurações, exportação de dados).
+> Site comercial e área do cliente da plataforma [DSPlay Analytics](https://dsplayground.com.br).
+
+![Astro](https://img.shields.io/badge/Astro-6-BC52EE?logo=astro&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38BDF8?logo=tailwindcss&logoColor=white)
+![Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?logo=cloudflare&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-245%20passing-22C55E)
+![License](https://img.shields.io/badge/license-MIT-6B7280)
+
+---
+
+## Visão geral
+
+Aplicação estática construída com **Astro 6 + Tailwind CSS 4**, hospedada no edge via **Cloudflare Pages**. Cobre duas superfícies:
+
+- **Marketing** — home, preços, recursos, integrações, segurança, changelog e status
+- **Área do cliente** — cadastro, login, onboarding, painel de métricas, configurações e exportação de dados
+
+A telemetria da própria landing é instrumentada via **[@DSPlayAnalytics/SDK](https://github.com/DSPlayAnalytics/SDK)** (dogfood).
+
+---
 
 ## Stack
 
-- [Astro 6](https://astro.build) — geração estática + SSR
-- [Tailwind CSS 4](https://tailwindcss.com) — tokens via `@theme {}` em `src/styles/global.css`
-- [DSPlay Analytics SDK](https://github.com/DSPlayAnalytics/SDK) — telemetria de funil (dogfood)
-- Deploy via [Cloudflare Pages](https://pages.cloudflare.com)
+| Camada | Tecnologia |
+|---|---|
+| Framework | [Astro 6](https://astro.build) — output estático |
+| Estilo | [Tailwind CSS 4](https://tailwindcss.com) — tokens via `@theme {}` |
+| Analytics | [@DSPlayAnalytics/SDK](https://github.com/DSPlayAnalytics/SDK) |
+| Testes | [Vitest 3](https://vitest.dev) + [Happy DOM 20](https://github.com/capricorn86/happy-dom) |
+| Deploy | [Cloudflare Pages](https://pages.cloudflare.com) |
 
-## Páginas
+---
+
+## Estrutura de páginas
+
+### Público
 
 | Rota | Descrição |
 |---|---|
-| `/` | Home |
-| `/precos` | Planos free / pro |
-| `/recursos` | Funcionalidades |
-| `/integracoes` | Guias de integração |
-| `/seguranca` | Política de segurança |
+| `/` | Home — proposta de valor e CTA |
+| `/precos` | Planos free / pro com comparativo |
+| `/recursos` | Funcionalidades da plataforma |
+| `/integracoes` | Guias de integração (snippet + SDK) |
+| `/seguranca` | Política de segurança e privacidade |
 | `/sobre` | Sobre o projeto |
 | `/changelog` | Histórico de versões |
-| `/status` | Status da plataforma |
+| `/status` | Status dos serviços em tempo real |
+
+### Área do cliente (autenticado)
+
+| Rota | Descrição |
+|---|---|
 | `/cliente/cadastro` | Criação de conta |
-| `/cliente/login` | Login |
-| `/cliente/painel` | Dashboard do cliente (autenticado) |
-| `/cliente/configuracoes` | Configurações — 7 abas |
-| `/cliente/onboarding` | Wizard de onboarding — 3 passos |
-| `/cliente/exportar` | Download de dados arquivados |
-| `/cliente/esqueci-senha` | Recuperação de senha |
+| `/cliente/login` | Login com senha ou magic-link |
+| `/cliente/esqueci-senha` | Recuperação de senha por e-mail |
+| `/cliente/onboarding` | Wizard de 3 passos pós-cadastro |
+| `/cliente/painel` | Dashboard de métricas com live counter |
+| `/cliente/configuracoes` | Configurações em 7 abas (chaves, plano, billing, etc.) |
+| `/cliente/exportar` | Download de dados arquivados (R2) |
+
+---
 
 ## Design system
 
-Componentes em `src/components/ui/`:
+Componentes reutilizáveis em `src/components/ui/`:
 
 `Badge` · `Breadcrumbs` · `Button` · `Card` · `ChartCard` · `EmptyState` · `FormError` · `Input` · `MetricCard` · `Section` · `Stepper` · `Tabs` · `ToastContainer`
 
-Tokens semânticos (`success`, `warning`, `danger`, `info`) definidos em `src/styles/global.css` via `@theme {}`.
+Tokens semânticos (`success`, `warning`, `danger`, `info`) definidos em `src/styles/global.css` via `@theme {}` do Tailwind 4.
+
+---
 
 ## Desenvolvimento local
 
 ### Pré-requisitos
 
 - Node.js 20+
-- Backend rodando em `http://localhost:5000` ([DSPlayAnalytics/backend](https://github.com/DSPlayAnalytics/backend))
+- Backend rodando localmente ([DSPlayAnalytics/backend](https://github.com/DSPlayAnalytics/backend))
+- Token GitHub com `read:packages` para instalar o SDK do GitHub Packages
 
 ### Instalação
 
 ```bash
+# Autenticar no GitHub Packages para o SDK
+export NODE_AUTH_TOKEN=$(gh auth token)
+
 npm install
 cp .env.example .env
-# Ajuste PUBLIC_API_URL=http://localhost:5000 para dev local
+# Ajuste PUBLIC_API_URL=http://localhost:5000 para apontar ao backend local
 ```
 
-### Comandos
+### Comandos disponíveis
 
 ```bash
-npm run dev        # servidor de desenvolvimento (http://localhost:4321)
-npm run build      # build estático para ./dist
-npm run preview    # preview do build
-npm run check      # astro check + tsc
-npm run test       # vitest (245 testes)
+npm run dev        # Servidor de desenvolvimento em http://localhost:4321
+npm run build      # Build estático → ./dist
+npm run preview    # Preview do build gerado
+npm run check      # astro check + TypeScript
+npm run test       # Vitest — 245 testes
 ```
+
+---
 
 ## Variáveis de ambiente
 
-Todas as variáveis são públicas (embutidas no bundle em build time):
+Todas as variáveis são **públicas** — embutidas no bundle em tempo de build. Não armazene segredos aqui.
 
-| Variável | Descrição | Padrão |
+| Variável | Descrição | Exemplo |
 |---|---|---|
-| `PUBLIC_SITE_URL` | URL canônica do site | `https://dsplayground.com.br` |
-| `PUBLIC_API_URL` | URL do backend de auth/ingest | `https://api.dsplayground.com.br` |
-| `PUBLIC_DASHBOARD_URL` | URL base do dashboard logado | `https://app.dsplayground.com.br/cliente/metricas` |
-| `PUBLIC_PUBLISHABLE_KEY` | Publishable key da própria landing (dogfood) | vazio |
+| `PUBLIC_SITE_URL` | URL canônica (canonical, OG, sitemap) | `https://dsplayground.com.br` |
+| `PUBLIC_API_URL` | Endpoint do backend de auth e ingestão | `https://api.dsplayground.com.br` |
+| `PUBLIC_DASHBOARD_URL` | URL base do dashboard autenticado | `https://app.dsplayground.com.br/cliente/metricas` |
+| `PUBLIC_PUBLISHABLE_KEY` | Publishable key da landing (dogfood) | `pk_production_...` |
 | `PUBLIC_DEBUG` | Logs do SDK no console | `false` |
+
+Copie `.env.example` para `.env` e ajuste os valores para o ambiente local.
+
+---
 
 ## Deploy
 
-O deploy é gerenciado pelo Cloudflare Pages apontando para este repositório. O build roda automaticamente em cada push para `main`.
+O deploy é automático via **Cloudflare Pages** a cada push em `main`.
 
 ```
-astro build → dist/ → Cloudflare Pages CDN
+git push → Cloudflare Pages build → astro build → dist/ → CDN global
 ```
+
+Variáveis de build são configuradas no dashboard do Cloudflare Pages. A variável `NODE_AUTH_TOKEN` é necessária para instalar o SDK durante o build.
+
+---
+
+## Repositórios relacionados
+
+| Repositório | Descrição |
+|---|---|
+| [DSPlayAnalytics/backend](https://github.com/DSPlayAnalytics/backend) | API Flask — auth, ingestão, billing |
+| [DSPlayAnalytics/SDK](https://github.com/DSPlayAnalytics/SDK) | SDK de analytics para browsers |
+
+---
 
 ## Licença
 
-MIT
+MIT © [DSPlay Analytics](https://dsplayground.com.br)

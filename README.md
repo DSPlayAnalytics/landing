@@ -410,7 +410,6 @@ O deploy é automático a cada push em `main`.
 
 | Repositório | Descrição |
 |---|---|
-| [DSPlayAnalytics/backend](https://github.com/DSPlayAnalytics/backend) | API Flask — auth, ingestão de eventos, billing, exportação |
 | [DSPlayAnalytics/SDK](https://github.com/DSPlayAnalytics/SDK) | SDK de analytics para browsers — instrumentação de eventos |
 
 ---
